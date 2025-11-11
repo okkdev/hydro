@@ -100,7 +100,7 @@ function _hydro_prompt --on-event fish_prompt
               command jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template \"
                 separate(' ',
                   change_id.shortest(4),
-                  bookmarks,
+                  heads(::@- & bookmarks()),
                   concat(
                     if(conflict, '$hydro_symbol_jj_conflict'),
                     if(divergent, '$hydro_symbol_jj_divergent'),
