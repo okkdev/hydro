@@ -96,11 +96,24 @@ function _hydro_prompt --on-event fish_prompt
 
     if test "$_hydro_vcs_type" = "jj"
         fish --private --command "
-            set branch (
+            set -l change_id (
+              command jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template 'change_id.shortest(4)' \
+              2>/dev/null
+            )
+            set -l current_plain_id (
+              command jj log --revisions @ --no-graph --ignore-working-copy --color never --limit 1 --template 'change_id' \
+              2>/dev/null
+            )
+
+            set -l closest_bookmark (
+              command jj log --revisions 'heads(::@ & bookmarks())' --no-graph --ignore-working-copy --limit 1 --template \"
+                if(stringify(change_id) == '\$current_plain_id', bookmarks, label('bookmark', surround('(', ')', bookmarks)))
+              \" 2>/dev/null
+            )
+
+            set -l info (
               command jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template \"
                 separate(' ',
-                  change_id.shortest(4),
-                  heads(::@- & bookmarks()),
                   concat(
                     if(conflict, '$hydro_symbol_jj_conflict'),
                     if(divergent, '$hydro_symbol_jj_divergent'),
@@ -116,8 +129,10 @@ function _hydro_prompt --on-event fish_prompt
                     )
                   ) ++ raw_escape_sequence('\x1b[0m'),
                 )
-              \" 2>/dev/null | string replace --regex -- '(.+)' '@\$1'
+              \" 2>/dev/null
             )
+
+            set -l branch (echo \"@\$change_id \$closest_bookmark \$info\")
 
             test -z \"\$$_hydro_vcs\" && set --universal $_hydro_vcs \"\$branch \"
 
@@ -127,7 +142,7 @@ function _hydro_prompt --on-event fish_prompt
         " &
     else
         fish --private --command "
-            set branch (
+            set -l branch (
                 command git symbolic-ref --short HEAD 2>/dev/null ||
                 command git describe --tags --exact-match HEAD 2>/dev/null ||
                 command git rev-parse --short HEAD 2>/dev/null |
