@@ -106,7 +106,7 @@ function _hydro_prompt --on-event fish_prompt
             )
 
             set -l closest_bookmark (
-              command jj log --revisions 'heads(::@ & bookmarks())' --no-graph --ignore-working-copy --limit 1 --template \"
+              command jj log --revisions 'heads(::@ & bookmarks())' --no-graph --ignore-working-copy --color always --limit 1 --template \"
                 if(stringify(change_id) == '\$current_plain_id', bookmarks, label('bookmark', surround('(', ')', bookmarks)))
               \" 2>/dev/null
             )
